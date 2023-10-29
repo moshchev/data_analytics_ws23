@@ -223,7 +223,7 @@ data_pca = pca.fit_transform(data_no_outliers)
 plt.scatter(data_pca[:, 0], data_pca[:, 1], c=clusters, cmap='rainbow', edgecolor='k', s=100)
 plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
-plt.title('KMeans Clustering with 5 Clusters')
+plt.title('KMeans Clustering with 3 Clusters')
 plt.show()
 
 ## PCA to reduce dimensions and visualise clusters differentiation
@@ -239,7 +239,7 @@ axis = graph.add_subplot(projection="3d")
 xdata = data_pca[:, 0]
 ydata = data_pca[:, 1]
 zdata = data_pca[:, 2]
-axis.scatter3D(xdata, ydata, zdata, c=clusters, cmap = "rainbow", s=100)
+axis.scatter3D(xdata, ydata, zdata, c=clusters, cmap = "rainbow", s=10)
 axis.set_xlabel("Principal Component 1")
 axis.set_ylabel("Principal Component 2")
 axis.set_zlabel("Principal Component 3")
