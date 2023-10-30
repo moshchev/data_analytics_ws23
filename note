@@ -1,0 +1,19 @@
+TODO
+
+# Code 
+    .py -> .ipynb
+    Push data
+    EDA for 2nd and 3d dataset (Distributions)
+    Variance explained graph
+    Embeddings
+    Check if column names make difference on kmeans performance with embeddings
+    Davis Bolduin(?) Description, math on that, inplement in code
+    
+    2nd priority
+        Siloutte and T-SNE (?) if easy to implement try to
+
+# Presentation 
+    Make a draft for an agenda
+        Research question 
+        Sources of data, references
+        
