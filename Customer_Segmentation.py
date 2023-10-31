@@ -236,6 +236,9 @@ for col in numerical_columns_check:
 #   -most remaining variables are either heavily skewed, contain a lot of outliers, or both- they do, however, have...
 #... the following feature in common: They all have an negative exponential distribution, in order to standardize this...
 #... the data is transformed via natural log
+#... in general the skewness of the purchasing data (expenditure, products, web visits etc.) suggests that most...
+#... customers are don't buy at this store frequently, as the distribution of the number of days of being a customer...
+#... are pretty flat, although that would suggest a decline, not an as step as depicted
 
 
 children = data["Kidhome"]+data["Teenhome"]
@@ -301,9 +304,7 @@ categorical_cols = ['Marital_Status', 'Year_Birth', 'Is_Parent', 'AcceptedCmp3',
 ordinal_cols = ['Education']
 numerical_cols = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Recency','MntWines', 'MntFruits',
                   'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds','NumDealsPurchases',
-                  'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases','NumWebVisitsMonth']  # Accepted CMp is an already one hot encoded variable, as well as...
-# ...Response and Complain
-
+                  'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases','NumWebVisitsMonth']
 # Create a transformer for each data type
 # Transfomer for categorical data based on OHC
 categorical_transformer = Pipeline(steps=[
