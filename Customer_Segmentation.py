@@ -359,8 +359,6 @@ clusters = km.fit_predict(data_no_outliers)
 
 print(km.cluster_centers_)
 
-data_no_outliers['cluster'] = clusters
-
 ## PCA to reduce dimensions and visualise clusters differentiation
 import matplotlib.pyplot as plt
 
