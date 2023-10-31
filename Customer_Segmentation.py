@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd # for dataframe manipulation
 import numpy as np # linear algebra
 
@@ -135,25 +137,171 @@ data["Household Size"] = household_size
 #  changing absurd and yolo, since they probably best represent a person who is single
 # the data has not been transformed like in the original data cleaning, since different there may be differences in...
 # ...in the marital statuses (the ones that actually exist)
-data["Marital_Status"] = data["Marital_Status"].replace({"Absurd": "Single", "YOLO": "Single",})
+data["Marital_Status"] = data["Marital_Status"].replace({"Alone":"Single","Absurd": "Single", "YOLO": "Single",})
 
 # dropping Data (useless features):
 
 to_drop = ["Z_CostContact", "Z_Revenue", "ID", "Children"]
 data = data.drop(to_drop, axis=1)
-#  dropping outliers according to original data cleaning
+
+#  dropping outliers according to original data cleaning, since the variable Year_Birth has been transformed...
+# ...differently, we will check if the count is low enough to just drop
+print(data["Year_Birth"].value_counts()["The Greatest Generation"])
+
+# three entries, same as in the initial data cleaning- okay to drop
+
+# The count is at 23- not insignificant
 
 data = data[(data["Year_Birth"] != "The Greatest Generation")]
 data = data[(data["Income"] < 600000)]
 data["Education"] = data["Education"].replace({"2n Cycle": "2nd_Cycle"})
 
-categorical_cols = ['Marital_Status', 'Year_Birth']
-ordinal_cols = ['Education']
-numerical_cols = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Kidhome', 'Teenhome', 'Recency',
+
+categorical_cols_check = ['Marital_Status', 'Year_Birth', 'Education']
+
+# Distribution of categorical data. Each column plotted
+sns.set(style="whitegrid")
+
+
+# Plotting each categorical column
+for col in categorical_cols_check:
+    plt.figure(figsize=(10, 5))  # Adjust the size of the figure
+    sns.countplot(data=data, x=col, order=data[col].value_counts().index)  # Ordering bars by count
+    plt.title(f'Distribution of {col}')
+    plt.xticks(rotation=45)  # Rotate x labels for better visibility if needed
+    plt.tight_layout()  # Adjust subplot params for better layout
+    plt.show()
+
+# "The Silent Generation" count is looks to be quite low
+
+print(data["Year_Birth"].value_counts()["The Silent Generation"])
+
+# The count is at 23- not insignificant-> checking if these are outliers by plotting this data against...
+# ...the seemingly most impactful numerical variables: Income and Expenditure. First the variable will be transformed:
+
+# ... changing each entry into a count
+
+year_birth_check = []
+
+for x in data["Year_Birth"]:
+    y = data["Year_Birth"].value_counts()[x]
+    year_birth_check.append(y)
+
+data["year_birth_check"] = year_birth_check
+
+check = ["Income", "Expenditure", "Household Size"]
+
+for x in check:
+    data.plot.scatter("year_birth_check", x)
+    plt.show()
+
+
+# the data seems fine- there seems to be a non linear correlation between the generation and the family size- which does make sense
+# this correlation was not checked in the initial data analysis/cleaning
+# although it seems like income still has some outliers - the extrem outliers are gone, and these might still be valuable for the data-set.
+
+# checking distributions of numerical data:
+
+numerical_columns_check = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Kidhome', 'Teenhome', 'Recency',
                   'MntWines', 'MntFruits', 'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds',
                   'NumDealsPurchases', 'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases',
-                  'NumWebVisitsMonth', 'AcceptedCmp3', 'AcceptedCmp4', 'AcceptedCmp5', 'AcceptedCmp1', 'AcceptedCmp2',
-                  'Complain', 'Response']  # Accepted CMp is an already one hot encoded variable, as well as...
+                  'NumWebVisitsMonth']
+
+
+for col in numerical_columns_check:
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    sns.histplot(data[col], bins=30, kde=True)
+    plt.title(f'Distribution of {col}')
+
+    plt.tight_layout()
+    plt.show()
+
+    skewness = data[col].skew()
+    kurtosis = data[col].kurtosis()
+    print(f"{col} - Skewness: {round(skewness, 3)}, Kurtosis: {round(kurtosis, 3)}")
+
+# first address some of the variables with low skewness:
+#   -Income is similar to a normal distribution too, with a few outliers-> these will be removed
+#   -Kidhome is skewed heavily to the left
+#   -Teenhome is skewed heaviliy to the left, too, hence combining these will not work, instead these will be transformed..
+#...to a new variable Is Parent- similar to the initial data cleaning
+#   -Household size has low skewness and low kurtois- it is similar enough to a normal distribution
+#   -Number of Store Purchases is also close enough to a normal distribution
+#   -Dt_customer is similar to a univariate distribution, can be transformed with gaussian assumption
+#   -Recency is also similar to a univariate distribution, can be transformed with gaussian assumption
+#    -Expenditure is skewed to the left heavily, but does not have as high tails
+#... NumberWebVisits is close to a normal distribution, however it has quite a few outliers, which will be eliminated
+#   -most remaining variables are either heavily skewed, contain a lot of outliers, or both- they do, however, have...
+#... the following feature in common: They all have an negative exponential distribution, in order to standardize this...
+#... the data is transformed via natural log
+
+
+children = data["Kidhome"]+data["Teenhome"]
+
+is_parent = []
+
+for x in children:
+    if x > 0:
+        is_parent.append('no')
+    else:
+        is_parent.append('yes')
+
+data["Is_Parent"] = is_parent
+
+data_to_drop = ["Kidhome", "Teenhome"]
+data = data.drop(data_to_drop, axis=1)
+
+# natural log transformation of columns
+
+natural_log_transformations = ['MntWines', 'MntFruits',
+                  'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds','NumDealsPurchases',
+                  'NumWebPurchases', 'NumCatalogPurchases', 'NumWebVisitsMonth']
+
+def natural_log(x):
+    if x == 0:
+        y = 0
+    else:
+        y = math.log(x)
+    return y
+
+for x in natural_log_transformations:
+    data[x] = data[x].apply(natural_log)
+
+
+for col in natural_log_transformations:
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    sns.histplot(data[col], bins=30, kde=True)
+    plt.title(f'Distribution of {col}')
+
+    plt.tight_layout()
+    plt.show()
+
+    skewness = data[col].skew()
+    kurtosis = data[col].kurtosis()
+    print(f"{col} - Skewness: {round(skewness, 3)}, Kurtosis: {round(kurtosis, 3)}")
+
+# the overall skewness is improved, and the number of outliers is reduced drastically
+
+# due to using a standardized code for the data_transformation, particularly beacuse of some of the binary/categoricak...
+# ...variables, the data needs to be transformed from binary to categorical
+
+cat_transform = ['AcceptedCmp3','AcceptedCmp2','AcceptedCmp1','AcceptedCmp4','AcceptedCmp5','Complain', 'Response']
+
+for x in cat_transform:
+    data[x] = data[x].replace({1:"yes",0: "no"})
+
+print(data['AcceptedCmp3'])
+
+categorical_cols = ['Marital_Status', 'Year_Birth', 'Is_Parent', 'AcceptedCmp3',
+                  'AcceptedCmp2','AcceptedCmp1','AcceptedCmp4','AcceptedCmp5','Complain', 'Response']
+ordinal_cols = ['Education']
+numerical_cols = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Recency','MntWines', 'MntFruits',
+                  'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds','NumDealsPurchases',
+                  'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases','NumWebVisitsMonth']  # Accepted CMp is an already one hot encoded variable, as well as...
 # ...Response and Complain
 
 # Create a transformer for each data type
@@ -229,6 +377,27 @@ plt.show()
 ## PCA to reduce dimensions and visualise clusters differentiation
 import matplotlib.pyplot as plt
 
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+# Assuming your data is in a variable called `data`
+pca = PCA().fit(data_no_outliers)
+
+# Calculate cumulative sum of explained variances
+cum_sum = np.cumsum(pca.explained_variance_ratio_)
+
+# Plot
+plt.figure(figsize=(10, 8))
+plt.plot(range(1, len(cum_sum) + 1), cum_sum, marker='o', linestyle='--')
+plt.title("Cumulative Explained Variance")
+plt.xlabel("Number of Components")
+plt.ylabel("Cumulative Explained Variance")
+plt.grid(True)
+plt.legend(loc="best")
+plt.tight_layout()
+plt.show()
+
 # Reduce data to 3D
 pca = PCA(n_components=3)
 data_pca = pca.fit_transform(data_no_outliers)
@@ -244,3 +413,48 @@ axis.set_xlabel("Principal Component 1")
 axis.set_ylabel("Principal Component 2")
 axis.set_zlabel("Principal Component 3")
 plt.show()
+
+# creating summary of a cluster
+
+data['outliers'] = outliers
+data = data[data['outliers']==0]
+data['clusters'] = clusters
+
+print(data)
+
+categorical_cols = ['Marital_Status', 'Year_Birth', 'Is_Parent', 'AcceptedCmp3',
+                  'AcceptedCmp2','AcceptedCmp1','AcceptedCmp4','AcceptedCmp5','Complain', 'Response']
+ordinal_cols = ['Education']
+numerical_cols = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Recency','MntWines', 'MntFruits',
+                  'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds','NumDealsPurchases',
+                  'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases','NumWebVisitsMonth']
+
+print(data.groupby('clusters').agg({
+    'Marital_Status':pd.Series.mode,
+    'Year_Birth':pd.Series.mode,
+    'Is_Parent':pd.Series.mode,
+    'AcceptedCmp3':pd.Series.mode,
+    'AcceptedCmp2':pd.Series.mode,
+    'AcceptedCmp1':pd.Series.mode,
+    'AcceptedCmp4':pd.Series.mode,
+    'AcceptedCmp5':pd.Series.mode,
+    'Complain':pd.Series.mode,
+    'Response':pd.Series.mode,
+    'Education':pd.Series.mode,
+    'Income':pd.Series.mean,
+    'Expenditure':pd.Series.mode,
+    'Household Size':pd.Series.median,
+    'Recency':pd.Series.median,
+    'Dt_Customer':pd.Series.median,
+    'MntWines':pd.Series.mean,
+    'MntFruits':pd.Series.mean,
+    'MntMeatProducts':pd.Series.mean,
+    'MntFishProducts':pd.Series.mean,
+    'MntSweetProducts':pd.Series.mean,
+    'MntGoldProds':pd.Series.mean,
+    'NumDealsPurchases':pd.Series.mean,
+    'NumWebPurchases':pd.Series.mean,
+    'NumCatalogPurchases': pd.Series.mean,
+    'NumStorePurchases': pd.Series.mode,
+    'NumWebVisitsMonth': pd.Series.mean
+    }))
