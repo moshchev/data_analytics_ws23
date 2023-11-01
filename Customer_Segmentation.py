@@ -108,6 +108,8 @@ for x in year:
 
 data["Year_Birth"] = generations_list  # transforming the data
 
+print(generations_list)
+
 # creating a variable for total expenditure, this
 data["Expenditure"] = data["MntWines"] + data["MntFruits"] + data["MntMeatProducts"] + data["MntFishProducts"] + data["MntSweetProducts"] + data["MntGoldProds"]
 
@@ -339,6 +341,7 @@ transformed_data = pipeline.transform(data)
 transformed_df = pd.DataFrame(transformed_data, columns = pipeline.fit(data).get_feature_names_out().tolist())
 print(transformed_df)
 
+
 # Outliers
 detector = ECOD()
 detector.fit(transformed_df)
@@ -457,3 +460,26 @@ print(data.groupby('clusters').agg({
     'NumStorePurchases': pd.Series.mode,
     'NumWebVisitsMonth': pd.Series.mean
     }))
+
+transformed_df["mean"] = transformed_df.mean(axis=1)
+
+mean_vector = []
+
+for x in transformed_df["mean"]:
+    mean_vector.append(x)
+
+sample_mean = transformed_df["mean"].mean()
+
+variance_placeholder = []
+
+for x in mean_vector:
+    y = (x-sample_mean)**2
+    variance_placeholder.append(y)
+
+n_1 = len(variance_placeholder)-1
+
+var_sum = sum(variance_placeholder)
+
+sample_variance = var_sum/n_1
+
+
