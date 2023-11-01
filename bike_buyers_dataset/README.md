@@ -1,7 +1,8 @@
 Key features of this dataset:
 
-    - Variance is
-    - 
+    - Sample variance is 0.06
+    - Mean Categorical Data Variance is 0.04
+    - Within Cluster Variance is 0.02
 
 Results:
 
@@ -13,4 +14,4 @@ Results:
     - Davies Bouldin Score is 1.45
     - Silhouette Score: 0.27
 
-### Application of embeddingns on this dataset created an extra value for clustering with kmenas. 
+### Application of embeddingns on this dataset created an extra value for clustering with kmenas due to to low sample variance of this data
