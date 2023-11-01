@@ -164,7 +164,7 @@ categorical_cols_check = ['Marital_Status', 'Year_Birth', 'Education']
 # Distribution of categorical data. Each column plotted
 sns.set(style="whitegrid")
 
-
+"""
 # Plotting each categorical column
 for col in categorical_cols_check:
     plt.figure(figsize=(10, 5))  # Adjust the size of the figure
@@ -173,7 +173,7 @@ for col in categorical_cols_check:
     plt.xticks(rotation=45)  # Rotate x labels for better visibility if needed
     plt.tight_layout()  # Adjust subplot params for better layout
     plt.show()
-
+"""
 # "The Silent Generation" count is looks to be quite low
 
 print(data["Year_Birth"].value_counts()["The Silent Generation"])
@@ -209,7 +209,7 @@ numerical_columns_check = ['Income', 'Expenditure', 'Household Size', 'Dt_Custom
                   'NumDealsPurchases', 'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases',
                   'NumWebVisitsMonth']
 
-
+"""
 for col in numerical_columns_check:
     plt.figure(figsize=(12, 6))
 
@@ -223,7 +223,7 @@ for col in numerical_columns_check:
     skewness = data[col].skew()
     kurtosis = data[col].kurtosis()
     print(f"{col} - Skewness: {round(skewness, 3)}, Kurtosis: {round(kurtosis, 3)}")
-
+"""
 # first address some of the variables with low skewness:
 #   -Income is similar to a normal distribution too, with a few outliers-> these will be removed
 #   -Kidhome is skewed heavily to the left
@@ -274,7 +274,7 @@ def natural_log(x):
 for x in natural_log_transformations:
     data[x] = data[x].apply(natural_log)
 
-
+"""
 for col in natural_log_transformations:
     plt.figure(figsize=(12, 6))
 
@@ -288,7 +288,7 @@ for col in natural_log_transformations:
     skewness = data[col].skew()
     kurtosis = data[col].kurtosis()
     print(f"{col} - Skewness: {round(skewness, 3)}, Kurtosis: {round(kurtosis, 3)}")
-
+"""
 # the overall skewness is improved, and the number of outliers is reduced drastically
 
 # due to using a standardized code for the data_transformation, particularly beacuse of some of the binary/categoricak...
@@ -339,8 +339,6 @@ transformed_data = pipeline.transform(data)
 
 # create a df from transformed data to have a better understanding of data
 transformed_df = pd.DataFrame(transformed_data, columns = pipeline.fit(data).get_feature_names_out().tolist())
-print(transformed_df)
-
 
 # Outliers
 detector = ECOD()
@@ -424,13 +422,6 @@ data['clusters'] = clusters
 
 print(data)
 
-categorical_cols = ['Marital_Status', 'Year_Birth', 'Is_Parent', 'AcceptedCmp3',
-                  'AcceptedCmp2','AcceptedCmp1','AcceptedCmp4','AcceptedCmp5','Complain', 'Response']
-ordinal_cols = ['Education']
-numerical_cols = ['Income', 'Expenditure', 'Household Size', 'Dt_Customer', 'Recency','MntWines', 'MntFruits',
-                  'MntMeatProducts', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds','NumDealsPurchases',
-                  'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases','NumWebVisitsMonth']
-
 print(data.groupby('clusters').agg({
     'Marital_Status':pd.Series.mode,
     'Year_Birth':pd.Series.mode,
@@ -461,6 +452,14 @@ print(data.groupby('clusters').agg({
     'NumWebVisitsMonth': pd.Series.mean
     }))
 
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import davies_bouldin_score
+
+print(f"Silhouette Score: {silhouette_score(data_no_outliers,clusters)}")
+print(f"Davies bouldin score: {davies_bouldin_score(data_no_outliers,clusters)}")
+
+transformed_df_cluster = transformed_df
+
 transformed_df["mean"] = transformed_df.mean(axis=1)
 
 mean_vector = []
@@ -482,4 +481,73 @@ var_sum = sum(variance_placeholder)
 
 sample_variance = var_sum/n_1
 
+print(sample_variance)
+
+cat_vector_mean = []
+
+cat_vector_mean.append(transformed_df["cat__Marital_Status_Married"].mean())
+cat_vector_mean.append(transformed_df["cat__Marital_Status_Single"].mean())
+cat_vector_mean.append(transformed_df["cat__Marital_Status_Together"].mean())
+cat_vector_mean.append(transformed_df["cat__Marital_Status_Widow"].mean())
+cat_vector_mean.append(transformed_df["cat__Year_Birth_Millennials"].mean())
+cat_vector_mean.append(transformed_df["cat__Year_Birth_The Baby Boomer Generation"].mean())
+cat_vector_mean.append(transformed_df["cat__Year_Birth_The Silent Generation"].mean())
+cat_vector_mean.append(transformed_df["cat__Is_Parent_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__AcceptedCmp3_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__AcceptedCmp2_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__AcceptedCmp1_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__AcceptedCmp4_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__AcceptedCmp5_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__Complain_yes"].mean())
+cat_vector_mean.append(transformed_df["cat__Response_yes"].mean())
+
+cat_mean = sum(cat_vector_mean)/len(cat_vector_mean)
+
+cat_var_list = []
+
+for x in cat_vector_mean:
+    y = (x-cat_mean)**2
+    cat_var_list.append(y)
+
+cat_variance = sum(cat_var_list)/(len(cat_var_list)-1)
+
+print(cat_variance)
+
+transformed_df_cluster["cluster"] = data["clusters"]
+
+filter_0 = transformed_df_cluster[transformed_df_cluster["cluster"]==0]
+filter_1 = transformed_df_cluster[transformed_df_cluster["cluster"]==1]
+filter_2 = transformed_df_cluster[transformed_df_cluster["cluster"]==2]
+
+mean_vector_0 = filter_0.mean(axis=1)
+mean_vector_1 = filter_1.mean(axis=1)
+mean_vector_2 = filter_2.mean(axis=1)
+
+mean_0 = mean_vector_0.mean()
+mean_1 = mean_vector_1.mean()
+mean_2 = mean_vector_2.mean()
+
+cluster_variance_list_0 = []
+cluster_variance_list_1 = []
+cluster_variance_list_2 = []
+
+for x in mean_vector_0:
+    y = (mean_0-x)**2
+    cluster_variance_list_0.append(y)
+
+for x in mean_vector_1:
+    y = (mean_1-x)**2
+    cluster_variance_list_1.append(y)
+
+for x in mean_vector_2:
+    y = (mean_2-x)**2
+    cluster_variance_list_2.append(y)
+
+var_0 = sum(cluster_variance_list_0)/(len(cluster_variance_list_0)-1)
+var_1 = sum(cluster_variance_list_1)/(len(cluster_variance_list_1)-1)
+var_2 = sum(cluster_variance_list_2)/(len(cluster_variance_list_2)-1)
+
+within_cluster_var = (var_0 + var_1 + var_2)/3
+
+print(within_cluster_var)
 
