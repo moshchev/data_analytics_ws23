@@ -5,20 +5,14 @@ import numpy as np # linear algebra
 
 # data visualization
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import matplotlib.cm as cm
-import plotly.express as px
-import plotly.graph_objects as go
 import seaborn as sns
-import shap
 
 # sklearn
 from sklearn.cluster import KMeans
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, PowerTransformer, OrdinalEncoder
-from sklearn.manifold import TSNE
-from sklearn.metrics import silhouette_score, silhouette_samples, accuracy_score, classification_report
+from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 
 from pyod.models.ecod import ECOD

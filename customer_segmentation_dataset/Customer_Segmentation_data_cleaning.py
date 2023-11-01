@@ -2,7 +2,7 @@ import math
 import pandas as pd
 
 # reading data from csv into pandas dataframe
-data = pd.read_csv("./data/marketing_campaign.csv", sep=";")
+data = pd.read_csv("marketing_campaign.csv", sep=";")
 data = data.dropna()  # drop null values, there is only 24 of them
 
 # changing type to datetime
