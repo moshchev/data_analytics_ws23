@@ -3,6 +3,7 @@ Key features of this dataset:
     - 
 
 Results:
+
     Preproceeding without embeddings:
     - Davies Bouldin score is 1.64
     - Silhouette Score is 0.19
